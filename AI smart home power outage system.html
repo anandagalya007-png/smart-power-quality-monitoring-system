@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Smart Power Quality Monitoring</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Arial,Helvetica,sans-serif
+}
+
+body{
+    background:#050505;
+    color:#fff;
+    min-height:100vh;
+}
+
+body:before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:
+    radial-gradient(circle at 50% 0%,rgba(255,145,0,.13),transparent 35%);
+}
+
+header{
+    height:72px;
+    padding:0 38px;
+    border-bottom:1px solid #252525;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.logo{
+    color:#ff9800;
+    font-size:25px;
+    font-weight:bold;
+    letter-spacing:3px;
+}
+
+.logo span{color:#fff}
+
+.headerInfo{
+    display:flex;
+    gap:25px;
+    align-items:center;
+}
+
+.live{
+    color:#43ed88;
+    font-size:12px;
+}
+
+.clock{
+    color:#777;
+}
+
+.container{
+    padding:24px 38px;
+}
+
+.heading{
+    margin-bottom:18px;
+}
+
+.heading h1{
+    font-size:28px;
+}
+
+.heading h1 span{
+    color:#ff9800;
+}
+
+.heading p{
+    color:#777;
+    font-size:12px;
+    margin-top:6px;
+}
+
+.grid3{
+    display:grid;
+    grid-template-columns:1fr 1.7fr 1fr;
+    gap:15px;
+}
+
+.card{
+    background:#101010;
+    border:1px solid #292929;
+    border-radius:15px;
+    padding:18px;
+}
+
+.title{
+    color:#777;
+    font-size:11px;
+    letter-spacing:1.5px;
+    margin-bottom:14px;
+}
+
+/* QUALITY */
+
+.quality{
+    text-align:center;
+}
+
+.ring{
+    width:155px;
+    height:155px;
+    margin:5px auto 15px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+    radial-gradient(circle,#101010 61%,transparent 62%),
+    conic-gradient(#ff9800 94%,#292929 0);
+}
+
+.score{
+    font-size:42px;
+    font-weight:bold;
+}
+
+.score small{
+    font-size:12px;
+    color:#777;
+}
+
+.status{
+    color:#43ed88;
+    font-size:13px;
+}
+
+/* PARAMETERS */
+
+.parameters{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+}
+
+.parameter{
+    padding:14px;
+    border-radius:10px;
+    background:#090909;
+    border:1px solid #242424;
+}
+
+.parameter label{
+    display:block;
+    color:#777;
+    font-size:10px;
+    margin-bottom:7px;
+}
+
+.value{
+    font-size:23px;
+    font-weight:bold;
+}
+
+.unit{
+    font-size:10px;
+    color:#777;
+}
+
+/* AI */
+
+.aiBox{
+    min-height:220px;
+}
+
+.aiStatus{
+    padding:12px;
+    border-radius:10px;
+    background:#090909;
+    border:1px solid #272727;
+}
+
+.aiStatus strong{
+    color:#ff9800;
+}
+
+.aiMessage{
+    color:#aaa;
+    font-size:13px;
+    line-height:1.6;
+    margin-top:10px;
+}
+
+.aiRows{
+    margin-top:12px;
+}
+
+.aiRow{
+    display:flex;
+    justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid #222;
+    font-size:12px;
+}
+
+.aiRow span:last-child{
+    color:#ff9800;
+    font-weight:bold;
+}
+
+/* CHART */
+
+.middle{
+    display:grid;
+    grid-template-columns:1.55fr 1fr;
+    gap:15px;
+    margin-top:15px;
+}
+
+.chart{
+    height:330px;
+}
+
+.chartArea{
+    height:270px;
+}
+
+/* ENERGY */
+
+.energy{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:15px;
+}
+
+.energyCard{
+    background:#090909;
+    border:1px solid #242424;
+    border-radius:11px;
+    padding:16px;
+}
+
+.energyCard p{
+    color:#777;
+    font-size:10px;
+}
+
+.energyCard h2{
+    margin-top:8px;
+    font-size:22px;
+}
+
+.used h2{color:#ff9800}
+.saved h2{color:#43ed88}
+.wasted h2{color:#ff5050}
+
+/* CIRCUITS */
+
+.circuit{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 0;
+    border-bottom:1px solid #222;
+}
+
+.dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#43ed88;
+    box-shadow:0 0 9px #43ed88;
+}
+
+.dot.red{
+    background:#ff4141;
+    box-shadow:0 0 9px #ff4141;
+}
+
+.circuitName{
+    font-size:12px;
+    color:#aaa;
+}
+
+.circuitValue{
+    margin-left:auto;
+    color:#777;
+    font-size:11px;
+}
+
+/* ALERT */
+
+.alert{
+    display:none;
+    margin-top:15px;
+    padding:13px;
+    border-radius:9px;
+    background:#250b0b;
+    border:1px solid #913333;
+    color:#ff6969;
+    font-size:12px;
+}
+
+/* CONTROLS */
+
+.controls{
+    display:flex;
+    gap:8px;
+    margin-top:15px;
+}
+
+button{
+    background:#111;
+    border:1px solid #333;
+    color:#aaa;
+    padding:9px 15px;
+    border-radius:7px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#ff9800;
+    color:#000;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:1000px){
+    .grid3,.middle{
+        grid-template-columns:1fr;
+    }
+
+    .energy{
+        grid-template-columns:1fr;
+    }
+
+    .container{
+        padding:20px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+    <div>
+        <div class="logo">SPQMS <span>⚡</span></div>
+        <div style="font-size:9px;color:#666;letter-spacing:2px">
+            AI POWER QUALITY MONITORING
+        </div>
+    </div>
+
+    <div class="headerInfo">
+        <div class="live">● AI LIVE</div>
+        <div class="clock" id="clock">00:00:00</div>
+    </div>
+
+</header>
+
+
+<div class="container">
+
+<div class="heading">
+    <h1>AI Smart <span>Power Monitoring</span></h1>
+    <p>
+        Real-time electrical monitoring • AI anomaly detection •
+        Fault prediction • Energy analysis
+    </p>
+</div>
+
+
+<!-- TOP -->
+
+<div class="grid3">
+
+    <!-- QUALITY -->
+
+    <div class="card quality">
+
+        <div class="title">POWER QUALITY SCORE</div>
+
+        <div class="ring" id="ring">
+            <div class="score">
+                <span id="score">94</span>
+                <small>/100</small>
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            ● SYSTEM NORMAL
+        </div>
+
+    </div>
+
+
+    <!-- PARAMETERS -->
+
+    <div class="card">
+
+        <div class="title">LIVE ELECTRICAL PARAMETERS</div>
+
+        <div class="parameters">
+
+            <div class="parameter">
+                <label>VOLTAGE</label>
+                <div class="value">
+                    <span id="voltage">230.0</span>
+                    <span class="unit">V</span>
+                </div>
+            </div>
+
+            <div class="parameter">
+                <label>CURRENT</label>
+                <div class="value">
+                    <span id="current">4.8</span>
+                    <span class="unit">A</span>
+                </div>
+            </div>
+
+            <div class="parameter">
+                <label>POWER</label>
+                <div class="value">
+                    <span id="power">1.10</span>
+                    <span class="unit">kW</span>
+                </div>
+            </div>
+
+            <div class="parameter">
+                <label>FREQUENCY</label>
+                <div class="value">
+                    <span id="frequency">50.0</span>
+                    <span class="unit">Hz</span>
+                </div>
+            </div>
+
+            <div class="parameter">
+                <label>POWER FACTOR</label>
+                <div class="value">
+                    <span id="pf">0.96</span>
+                </div>
+            </div>
+
+            <div class="parameter">
+                <label>LEAKAGE CURRENT</label>
+                <div class="value">
+                    <span id="leakage">3</span>
+                    <span class="unit">mA</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- AI -->
+
+    <div class="card aiBox">
+
+        <div class="title">AI DETECTION ENGINE</div>
+
+        <div class="aiStatus">
+            <strong id="aiState">
+                ● AI ANALYSIS ACTIVE
+            </strong>
+
+            <div class="aiMessage" id="aiMessage">
+                Analysing voltage, current, frequency,
+                power factor and leakage patterns...
+            </div>
+        </div>
+
+        <div class="aiRows">
+
+            <div class="aiRow">
+                <span>Detected Condition</span>
+                <span id="condition">NORMAL</span>
+            </div>
+
+            <div class="aiRow">
+                <span>AI Confidence</span>
+                <span id="confidence">96%</span>
+            </div>
+
+            <div class="aiRow">
+                <span>Fault Risk</span>
+                <span id="risk">LOW</span>
+            </div>
+
+            <div class="aiRow">
+                <span>Predicted Load</span>
+                <span id="load">62%</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- GRAPH + CIRCUITS -->
+
+<div class="middle">
+
+    <div class="card chart">
+
+        <div class="title">
+            AI REAL-TIME POWER ANALYSIS
+        </div>
+
+        <div class="chartArea">
+            <canvas id="chart"></canvas>
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="title">
+            CIRCUIT MONITOR
+        </div>
+
+        <div class="circuit">
+            <div class="dot" id="mainDot"></div>
+            <div class="circuitName">Main Supply</div>
+            <div class="circuitValue" id="mainState">NORMAL</div>
+        </div>
+
+        <div class="circuit">
+            <div class="dot" id="acDot"></div>
+            <div class="circuitName">AC Circuit</div>
+            <div class="circuitValue" id="acState">NORMAL</div>
+        </div>
+
+        <div class="circuit">
+            <div class="dot" id="kitchenDot"></div>
+            <div class="circuitName">Kitchen Circuit</div>
+            <div class="circuitValue" id="kitchenState">NORMAL</div>
+        </div>
+
+        <div class="circuit">
+            <div class="dot" id="bedDot"></div>
+            <div class="circuitName">Bedroom Circuit</div>
+            <div class="circuitValue" id="bedState">NORMAL</div>
+        </div>
+
+        <div class="circuit">
+            <div class="dot" id="otherDot"></div>
+            <div class="circuitName">Other Loads</div>
+            <div class="circuitValue" id="otherState">NORMAL</div>
+        </div>
+
+        <div class="alert" id="alert"></div>
+
+    </div>
+
+</div>
+
+
+<!-- ENERGY -->
+
+<div class="energy">
+
+    <div class="energyCard used">
+        <p>ENERGY CONSUMED</p>
+        <h2><span id="used">8.42</span> kWh</h2>
+    </div>
+
+    <div class="energyCard saved">
+        <p>ENERGY SAVED</p>
+        <h2><span id="saved">2.18</span> kWh</h2>
+    </div>
+
+    <div class="energyCard wasted">
+        <p>ENERGY WASTED</p>
+        <h2><span id="wasted">0.42</span> kWh</h2>
+    </div>
+
+</div>
+
+
+<div class="controls">
+
+    <button onclick="normalMode()">NORMAL</button>
+    <button onclick="voltageFault()">VOLTAGE FAULT</button>
+    <button onclick="leakageFault()">LEAKAGE</button>
+    <button onclick="overload()">OVERLOAD</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================
+   CLOCK
+========================= */
+
+function updateClock(){
+
+    document.getElementById("clock").innerText =
+        new Date().toLocaleTimeString();
+
+}
+
+setInterval(updateClock,1000);
+updateClock();
+
+
+/* =========================
+   CHART
+========================= */
+
+let points=[];
+
+for(let i=0;i<30;i++){
+
+    points.push(
+        0.8 + Math.random()*0.5
+    );
+
+}
+
+const chart = new Chart(
+    document.getElementById("chart"),
+    {
+        type:"line",
+
+        data:{
+            labels:points.map(()=>""),
+
+            datasets:[{
+
+                data:points,
+
+                borderColor:"#ff9800",
+
+                borderWidth:2,
+
+                pointRadius:0,
+
+                tension:.35
+
+            }]
+        },
+
+        options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false,
+
+            plugins:{
+                legend:{
+                    display:false
+                }
+            },
+
+            scales:{
+
+                x:{
+                    display:false
+                },
+
+                y:{
+                    grid:{
+                        color:"#222"
+                    },
+
+                    ticks:{
+                        color:"#777"
+                    }
+                }
+
+            }
+        }
+    }
+);
+
+
+/* =========================
+   AI ENGINE
+========================= */
+
+/*
+   This is a browser-based anomaly
+   detection engine.
+
+   It calculates an anomaly score
+   from voltage/current/leakage/PF.
+*/
+
+function AI_Detect(v,c,leak,pf){
+
+    let anomaly = 0;
+
+    /* Voltage anomaly */
+
+    if(v < 210 || v > 250){
+        anomaly += 35;
+    }
+
+    /* Current anomaly */
+
+    if(c > 10){
+        anomaly += 30;
+    }
+
+    /* Leakage anomaly */
+
+    if(leak > 10){
+        anomaly += 30;
+    }
+
+    /* Power factor */
+
+    if(pf < 0.85){
+        anomaly += 10;
+    }
+
+
+    /* AI decision */
+
+    if(anomaly >= 60){
+
+        return {
+            condition:"CRITICAL FAULT",
+            risk:"HIGH",
+            confidence:94,
+            score:45
+        };
+
+    }
+
+    if(anomaly >= 30){
+
+        return {
+            condition:"ANOMALY",
+            risk:"MEDIUM",
+            confidence:88,
+            score:68
+        };
+
+    }
+
+    return {
+        condition:"NORMAL",
+        risk:"LOW",
+        confidence:96,
+        score:94
+    };
+
+}
+
+
+/* =========================
+   UPDATE DASHBOARD
+========================= */
+
+function updateAI(v,c,leak,pf){
+
+    let result =
+        AI_Detect(v,c,leak,pf);
+
+    document.getElementById("condition")
+        .innerText=result.condition;
+
+    document.getElementById("risk")
+        .innerText=result.risk;
+
+    document.getElementById("confidence")
+        .innerText=result.confidence+"%";
+
+    document.getElementById("score")
+        .innerText=result.score;
+
+}
+
+
+/* =========================
+   NORMAL
+========================= */
+
+function normalMode(){
+
+    let v =
+        +(229 + Math.random()*3).toFixed(1);
+
+    let c =
+        +(4 + Math.random()*2).toFixed(1);
+
+    let leak =
+        Math.floor(2 + Math.random()*4);
+
+    let pf =
+        +(0.94 + Math.random()*0.04).toFixed(2);
+
+    let power =
+        +(v*c*pf/1000).toFixed(2);
+
+
+    setValues(v,c,power,leak,pf);
+
+    updateAI(v,c,leak,pf);
+
+
+    document.getElementById("status").innerText =
+        "● SYSTEM NORMAL";
+
+    document.getElementById("status").style.color =
+        "#43ed88";
+
+    document.getElementById("aiState").innerText =
+        "● AI ANALYSIS ACTIVE";
+
+    document.getElementById("aiMessage").innerText =
+        "AI analysed the electrical pattern. No abnormal behaviour detected.";
+
+    document.getElementById("mainState").innerText="NORMAL";
+    document.getElementById("acState").innerText="NORMAL";
+    document.getElementById("kitchenState").innerText="NORMAL";
+    document.getElementById("bedState").innerText="NORMAL";
+    document.getElementById("otherState").innerText="NORMAL";
+
+    resetDots();
+
+    document.getElementById("alert").style.display="none";
+}
+
+
+/* =========================
+   VOLTAGE FAULT
+========================= */
+
+function voltageFault(){
+
+    let v=258.7;
+    let c=5.2;
+    let leak=3;
+    let pf=.88;
+
+    let power=
+        +(v*c*pf/1000).toFixed(2);
+
+    setValues(v,c,power,leak,pf);
+
+    updateAI(v,c,leak,pf);
+
+    document.getElementById("status").innerText =
+        "● VOLTAGE ANOMALY";
+
+    document.getElementById("status").style.color =
+        "#ff4d4d";
+
+    document.getElementById("aiState").innerText =
+        "⚠ AI FAULT DETECTED";
+
+    document.getElementById("aiMessage").innerText =
+        "AI detected abnormal voltage outside the learned safe operating range. Possible over-voltage condition.";
+
+    red("mainDot");
+
+    document.getElementById("mainState").innerText =
+        "HIGH";
+
+    showAlert(
+        "⚠ AI DETECTION: High voltage detected on Main Supply Circuit."
+    );
+}
+
+
+/* =========================
+   LEAKAGE
+========================= */
+
+function leakageFault(){
+
+    let v=230;
+    let c=5.1;
+    let leak=28;
+    let pf=.91;
+
+    let power=
+        +(v*c*pf/1000).toFixed(2);
+
+    setValues(v,c,power,leak,pf);
+
+    updateAI(v,c,leak,pf);
+
+    document.getElementById("status").innerText =
+        "● LEAKAGE DETECTED";
+
+    document.getElementById("status").style.color =
+        "#ff4d4d";
+
+    document.getElementById("aiState").innerText =
+        "⚠ AI FAULT DETECTED";
+
+    document.getElementById("aiMessage").innerText =
+        "AI detected an abnormal residual-current pattern. Possible insulation or appliance leakage.";
+
+    red("kitchenDot");
+
+    document.getElementById("kitchenState").innerText =
+        "LEAKAGE";
+
+    showAlert(
+        "⚠ AI DETECTION: Leakage pattern detected in Kitchen Circuit."
+    );
+}
+
+
+/* =========================
+   OVERLOAD
+========================= */
+
+function overload(){
+
+    let v=228;
+    let c=13.2;
+    let leak=5;
+    let pf=.82;
+
+    let power=
+        +(v*c*pf/1000).toFixed(2);
+
+    setValues(v,c,power,leak,pf);
+
+    updateAI(v,c,leak,pf);
+
+    document.getElementById("status").innerText =
+        "● OVERLOAD DETECTED";
+
+    document.getElementById("status").style.color =
+        "#ff4d4d";
+
+    document.getElementById("aiState").innerText =
+        "⚠ AI FAULT DETECTED";
+
+    document.getElementById("aiMessage").innerText =
+        "AI detected a high-current pattern and classified it as an overload condition.";
+
+    red("acDot");
+
+    document.getElementById("acState").innerText =
+        "OVERLOAD";
+
+    showAlert(
+        "⚠ AI DETECTION: High load pattern detected on AC Circuit."
+    );
+}
+
+
+/* =========================
+   SET VALUES
+========================= */
+
+function setValues(v,c,power,leak,pf){
+
+    document.getElementById("voltage")
+        .innerText=v.toFixed(1);
+
+    document.getElementById("current")
+        .innerText=c.toFixed(1);
+
+    document.getElementById("power")
+        .innerText=power.toFixed(2);
+
+    document.getElementById("frequency")
+        .innerText=(49.8+Math.random()*.4).toFixed(1);
+
+    document.getElementById("pf")
+        .innerText=pf.toFixed(2);
+
+    document.getElementById("leakage")
+        .innerText=leak;
+
+}
+
+
+/* =========================
+   RED DOT
+========================= */
+
+function red(id){
+
+    document.getElementById(id)
+        .classList.add("red");
+
+}
+
+
+/* =========================
+   RESET DOTS
+========================= */
+
+function resetDots(){
+
+    document.querySelectorAll(".dot")
+        .forEach(d=>d.classList.remove("red"));
+
+}
+
+
+/* =========================
+   ALERT
+========================= */
+
+function showAlert(message){
+
+    let a=document.getElementById("alert");
+
+    a.innerText=message;
+
+    a.style.display="block";
+
+}
+
+
+/* =========================
+   LIVE GRAPH
+========================= */
+
+setInterval(()=>{
+
+    let voltage=
+        parseFloat(
+            document.getElementById("voltage").innerText
+        );
+
+    let current=
+        parseFloat(
+            document.getElementById("current").innerText
+        );
+
+    let power=
+        voltage*current/1000;
+
+    chart.data.datasets[0].data.push(power);
+
+    chart.data.datasets[0].data.shift();
+
+    chart.update("none");
+
+},1000);
+
+
+/* =========================
+   AUTO AI MONITORING
+========================= */
+
+setInterval(()=>{
+
+    /*
+      Demo sensor simulation.
+      Replace these values later with
+      ESP32 sensor/API values.
+    */
+
+    let v=
+        +(229+Math.random()*3).toFixed(1);
+
+    let c=
+        +(4+Math.random()*2).toFixed(1);
+
+    let leak=
+        Math.floor(2+Math.random()*4);
+
+    let pf=
+        +(0.94+Math.random()*0.04).toFixed(2);
+
+    let power=
+        +(v*c*pf/1000).toFixed(2);
+
+    setValues(v,c,power,leak,pf);
+
+    updateAI(v,c,leak,pf);
+
+},5000);
+
+</script>
+
+</body>
+</html>
